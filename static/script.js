@@ -39,6 +39,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalUpdateDate = document.getElementById('modal-update-date');
     const modalUpdateContent = document.getElementById('modal-update-content');
 
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+    // Theme initialization
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        themeToggleIcon.className = 'fa-solid fa-sun';
+    } else {
+        document.body.classList.remove('light-theme');
+        themeToggleIcon.className = 'fa-solid fa-moon';
+    }
+
     // ----------------------------------------------------
     // API Interactions
     // ----------------------------------------------------
@@ -209,6 +223,13 @@ document.addEventListener('DOMContentLoaded', () => {
             linkBtn.title = 'View official release documentation';
             linkBtn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i>';
             
+            // Copy (Clipboard) Button
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'action-icon-btn btn-copy-action';
+            copyBtn.title = 'Copy this update to clipboard';
+            copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+            copyBtn.addEventListener('click', () => copyToClipboard(update, copyBtn));
+
             // Share (Tweet) Button
             const tweetBtn = document.createElement('button');
             tweetBtn.className = 'action-icon-btn btn-tweet-action';
@@ -217,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tweetBtn.addEventListener('click', () => openTweetModal(update));
             
             actions.appendChild(linkBtn);
+            actions.appendChild(copyBtn);
             actions.appendChild(tweetBtn);
             
             header.appendChild(badgeDateGroup);
@@ -325,6 +347,81 @@ document.addEventListener('DOMContentLoaded', () => {
         closeTweetModal();
     }
 
+    // Copy to Clipboard Utility
+    function copyToClipboard(update, button) {
+        const textToCopy = `BigQuery Update [${update.type}] (${update.date}):\n${update.content_text}\n\nRead more: ${update.link}`;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const icon = button.querySelector('i');
+            icon.className = 'fa-solid fa-check';
+            button.classList.add('copied');
+            button.title = 'Copied!';
+            
+            setTimeout(() => {
+                icon.className = 'fa-regular fa-copy';
+                button.classList.remove('copied');
+                button.title = 'Copy this update to clipboard';
+            }, 1500);
+        }).catch(err => {
+            console.error('Failed to copy to clipboard:', err);
+        });
+    }
+
+    // Export to CSV Utility
+    function exportToCSV() {
+        if (!updates || updates.length === 0) return;
+        
+        // Get currently displayed updates
+        const filtered = updates.filter(update => {
+            const matchesFilter = activeFilter === 'all' || 
+                update.type.toLowerCase() === activeFilter.toLowerCase();
+            const searchLower = searchQuery.toLowerCase();
+            const matchesSearch = !searchQuery || 
+                update.date.toLowerCase().includes(searchLower) ||
+                update.type.toLowerCase().includes(searchLower) ||
+                update.content_text.toLowerCase().includes(searchLower);
+            return matchesFilter && matchesSearch;
+        });
+        
+        if (filtered.length === 0) {
+            alert('No release notes found to export.');
+            return;
+        }
+        
+        // Helper to properly format values for CSV (escaping quotes, wrapping commas/newlines)
+        const escapeCSV = (val) => {
+            if (val === null || val === undefined) return '';
+            let str = String(val).replace(/"/g, '""');
+            if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+                return `"${str}"`;
+            }
+            return str;
+        };
+        
+        const headers = ['Date', 'Type', 'Content Text', 'Link'];
+        const csvRows = [headers.map(escapeCSV).join(',')];
+        
+        filtered.forEach(update => {
+            csvRows.push([
+                update.date,
+                update.type,
+                update.content_text,
+                update.link
+            ].map(escapeCSV).join(','));
+        });
+        
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `BigQuery_Release_Notes_Export_${activeFilter}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     // ----------------------------------------------------
     // Event Listeners Setup
     // ----------------------------------------------------
@@ -372,6 +469,22 @@ document.addEventListener('DOMContentLoaded', () => {
         activeFilter = 'all';
         
         renderFeed();
+    });
+
+    // Export CSV & Theme Toggle Events
+    exportCsvBtn.addEventListener('click', exportToCSV);
+    
+    themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-theme');
+        let theme = 'dark';
+        
+        if (document.body.classList.contains('light-theme')) {
+            theme = 'light';
+            themeToggleIcon.className = 'fa-solid fa-sun';
+        } else {
+            themeToggleIcon.className = 'fa-solid fa-moon';
+        }
+        localStorage.setItem('theme', theme);
     });
 
     // Modal Events

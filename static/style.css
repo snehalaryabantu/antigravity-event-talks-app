@@ -978,3 +978,183 @@ body {
         text-align: center;
     }
 }
+
+/* ========================================================
+   Theme Toggle Button & Light Mode Styling
+   ======================================================== */
+
+.theme-toggle-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1.1rem;
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    border-color: var(--border-hover);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.theme-toggle-btn:active {
+    transform: translateY(0);
+}
+
+/* Copy Action Button Specific Styles */
+.action-icon-btn.btn-copy-action:hover {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--accent-emerald);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.action-icon-btn.btn-copy-action.copied {
+    background-color: var(--accent-emerald);
+    color: white;
+    border-color: var(--accent-emerald);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Light Theme Variables Override */
+body.light-theme {
+    --bg-primary: #f1f3f7;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.8);
+    --bg-card-hover: rgba(255, 255, 255, 0.95);
+    --bg-control: #e4e6eb;
+    
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #8c939e;
+    
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(99, 102, 241, 0.5);
+    --border-glow: 0 4px 20px rgba(99, 102, 241, 0.06);
+    
+    --accent-primary: #4f46e5;
+    --accent-secondary: #7c3aed;
+    
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Light theme overrides for layouts and cards */
+body.light-theme .stars-bg {
+    opacity: 0.2;
+    background-image: 
+        radial-gradient(1.5px 1.5px at 20px 30px, #00000010, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 40px 70px, #00000015, rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 90px 110px, #00000008, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 150px 180px, #00000018, rgba(0,0,0,0));
+}
+
+body.light-theme .glowing-orb {
+    opacity: 0.07;
+}
+
+body.light-theme .logo-text h1 {
+    background: linear-gradient(to right, #111827, #374151);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body.light-theme .last-updated {
+    background: rgba(0, 0, 0, 0.02);
+    color: var(--text-secondary);
+}
+
+body.light-theme .stats-banner {
+    background: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+}
+
+body.light-theme .search-bar input {
+    background-color: white;
+}
+
+body.light-theme .search-bar input:focus {
+    background-color: white;
+}
+
+body.light-theme .filter-chip {
+    background: rgba(0, 0, 0, 0.02);
+    color: var(--text-secondary);
+}
+
+body.light-theme .filter-chip:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
+
+body.light-theme .filter-chip.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
+body.light-theme .action-icon-btn,
+body.light-theme .theme-toggle-btn {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-theme .action-icon-btn:hover,
+body.light-theme .theme-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+body.light-theme .card-body code {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1e293b;
+    border-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Modal adjustments in light theme */
+body.light-theme .modal-container {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15), 0 0 40px rgba(99, 102, 241, 0.03);
+}
+
+body.light-theme .modal-title-area h2 {
+    color: #111827;
+}
+
+body.light-theme .update-preview-box {
+    background: rgba(0, 0, 0, 0.015);
+}
+
+body.light-theme .preview-text {
+    color: var(--text-secondary);
+}
+
+body.light-theme .form-group textarea {
+    background-color: rgba(0, 0, 0, 0.015);
+    color: #111827;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .form-group textarea:focus {
+    background-color: white;
+}
+
+body.light-theme .modal-footer {
+    background: rgba(0, 0, 0, 0.015);
+}
+
+body.light-theme .state-container {
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--text-primary);
+}
+
+body.light-theme .state-container h3 {
+    color: #111827;
+}
+

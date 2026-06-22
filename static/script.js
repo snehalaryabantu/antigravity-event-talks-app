@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeFilter = 'all';
     let searchQuery = '';
     let selectedUpdate = null;
+    let activeLayout = 'card'; // 'card' or 'list'
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let activeSharePlatform = 'twitter'; // 'twitter', 'slack', or 'linkedin'
 
     // DOM Elements
     const feedContainer = document.getElementById('feed-container');
@@ -42,6 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportCsvBtn = document.getElementById('export-csv-btn');
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const themeToggleIcon = document.getElementById('theme-toggle-icon');
+    const backToTopBtn = document.getElementById('back-to-top-btn');
+
+    const layoutCardBtn = document.getElementById('layout-card-btn');
+    const layoutListBtn = document.getElementById('layout-list-btn');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const offlineBanner = document.getElementById('offline-banner');
+    const shareTabs = document.querySelectorAll('.share-tab');
 
     // Theme initialization
     const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -150,6 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------
     
     function renderFeed() {
+        // Update counts on filter chips
+        updateFilterChipCounts();
+
         // Filter updates
         const filtered = updates.filter(update => {
             // Filter by type
@@ -170,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filtered.length === 0) {
             feedContainer.style.display = 'none';
             emptyState.style.display = 'flex';
+            loadMoreBtn.style.display = 'none';
             return;
         }
 
@@ -177,8 +192,19 @@ document.addEventListener('DOMContentLoaded', () => {
         feedContainer.style.display = 'flex';
         feedContainer.innerHTML = '';
 
+        // Slicing for pagination
+        const itemsToShow = currentPage * itemsPerPage;
+        const sliced = filtered.slice(0, itemsToShow);
+
+        // Toggle load more button visibility
+        if (filtered.length > itemsToShow) {
+            loadMoreBtn.style.display = 'block';
+        } else {
+            loadMoreBtn.style.display = 'none';
+        }
+
         // Render each update as a card
-        filtered.forEach(update => {
+        sliced.forEach(update => {
             const card = document.createElement('article');
             card.className = 'update-card';
             card.setAttribute('data-type', update.type);
@@ -210,6 +236,22 @@ document.addEventListener('DOMContentLoaded', () => {
             
             badgeDateGroup.appendChild(badge);
             badgeDateGroup.appendChild(date);
+
+            // Add compact toggle icon for list view
+            if (activeLayout === 'list') {
+                const chevron = document.createElement('i');
+                chevron.className = 'fa-solid fa-chevron-down compact-toggle-icon';
+                badgeDateGroup.appendChild(chevron);
+                
+                card.classList.add('collapsed');
+                
+                // Add click handler to toggle collapse
+                card.addEventListener('click', (e) => {
+                    // Prevent toggling when clicking action buttons
+                    if (e.target.closest('.card-actions')) return;
+                    card.classList.toggle('collapsed');
+                });
+            }
             
             const actions = document.createElement('div');
             actions.className = 'card-actions';
@@ -247,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Body content
             const body = document.createElement('div');
             body.className = 'card-body';
-            body.innerHTML = update.content_html;
+            body.innerHTML = searchQuery ? highlightHTML(update.content_html, searchQuery) : update.content_html;
 
             // Connect everything
             card.appendChild(header);
@@ -265,8 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Setup Modal info
         modalUpdateBadge.textContent = update.type;
-        // Reset badge classes on modal
-        const cardClass = `update-card`;
         document.querySelector('#tweet-modal .modal-container').setAttribute('data-type', update.type);
         
         modalUpdateDate.textContent = update.date;
@@ -278,25 +318,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         modalUpdateContent.textContent = previewText;
 
-        // Auto-compose smart default tweet:
-        // Title prefix layout
-        const titlePrefix = `BigQuery [${update.type}] (${update.date}):`;
+        // Reset tabs to default (Twitter)
+        activeSharePlatform = 'twitter';
+        shareTabs.forEach(t => {
+            if (t.getAttribute('data-platform') === 'twitter') t.classList.add('active');
+            else t.classList.remove('active');
+        });
         
-        // We calculate max description length
-        // Twitter treats links as 23 characters.
-        const twitterLinkLength = 23;
-        const extraWhitespace = 4; // newlines and spaces
-        const remainingSpace = 280 - titlePrefix.length - twitterLinkLength - extraWhitespace;
-        
-        let trimmedDesc = update.content_text;
-        if (trimmedDesc.length > remainingSpace) {
-            trimmedDesc = trimmedDesc.substring(0, remainingSpace - 3) + '...';
-        }
-        
-        const defaultTweetContent = `${titlePrefix}\n${trimmedDesc}\n\n${update.link}`;
-        
-        tweetTextarea.value = defaultTweetContent;
-        updateCharCounter();
+        // Load default content
+        updateShareComposer('twitter');
         
         tweetModal.style.display = 'flex';
         tweetTextarea.focus();
@@ -313,7 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = tweetTextarea.value;
         
         // Calculate length taking into account that URLs are treated as 23 chars
-        // We extract URLs in text and replace their length with 23.
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         const urls = text.match(urlRegex) || [];
         
@@ -325,26 +354,106 @@ document.addEventListener('DOMContentLoaded', () => {
         charCountCurrent.textContent = calculatedLength;
         
         const charCounterContainer = document.querySelector('.char-counter');
+        const progressCircle = document.getElementById('progress-ring-circle');
         
+        // Update SVG progress ring
+        // Circumference = 2 * PI * r = 2 * 3.14159 * 9 = 56.55
+        const circumference = 56.55;
+        let percentage = Math.min(calculatedLength / 280, 1.0);
+        if (calculatedLength < 0) percentage = 0;
+        const offset = circumference - (percentage * circumference);
+        progressCircle.style.strokeDashoffset = offset;
+        
+        // Update color and state based on limits
         if (calculatedLength > 280) {
             charCounterContainer.className = 'char-counter over-limit';
+            progressCircle.style.stroke = 'var(--accent-rose)';
             sendTweetBtn.disabled = true;
         } else if (calculatedLength > 250) {
             charCounterContainer.className = 'char-counter near-limit';
+            progressCircle.style.stroke = 'var(--accent-amber)';
             sendTweetBtn.disabled = false;
         } else {
             charCounterContainer.className = 'char-counter';
+            progressCircle.style.stroke = 'var(--accent-primary)';
             sendTweetBtn.disabled = false;
         }
     }
 
     function sendTweet() {
-        const tweetText = tweetTextarea.value.strip ? tweetTextarea.value.strip() : tweetTextarea.value.trim();
-        if (!tweetText) return;
+        const shareText = tweetTextarea.value.trim();
+        if (!shareText) return;
         
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
-        window.open(twitterUrl, '_blank', 'noopener,noreferrer');
-        closeTweetModal();
+        if (activeSharePlatform === 'twitter') {
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+            window.open(twitterUrl, '_blank', 'noopener,noreferrer');
+            closeTweetModal();
+        } else {
+            // Slack or LinkedIn: Copy to Clipboard
+            navigator.clipboard.writeText(shareText).then(() => {
+                const originalContent = sendTweetBtn.innerHTML;
+                sendTweetBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                sendTweetBtn.disabled = true;
+                
+                setTimeout(() => {
+                    sendTweetBtn.innerHTML = originalContent;
+                    sendTweetBtn.disabled = false;
+                    closeTweetModal();
+                }, 1000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy to clipboard.');
+            });
+        }
+    }
+
+    // Share Platform Composer Switcher Utility
+    function updateShareComposer(platform) {
+        activeSharePlatform = platform;
+        shareTabs.forEach(t => {
+            if (t.getAttribute('data-platform') === platform) t.classList.add('active');
+            else t.classList.remove('active');
+        });
+        
+        const characterCountContainer = document.querySelector('.char-counter-container');
+        const badge = selectedUpdate.type;
+        const date = selectedUpdate.date;
+        const text = selectedUpdate.content_text;
+        const link = selectedUpdate.link;
+        
+        if (platform === 'twitter') {
+            characterCountContainer.style.display = 'flex';
+            sendTweetBtn.className = 'btn btn-twitter';
+            sendTweetBtn.innerHTML = '<i class="fa-brands fa-x-twitter"></i> Post to Twitter';
+            
+            // Twitter default
+            const titlePrefix = `BigQuery [${badge}] (${date}):`;
+            const twitterLinkLength = 23;
+            const extraWhitespace = 4;
+            const remainingSpace = 280 - titlePrefix.length - twitterLinkLength - extraWhitespace;
+            let trimmed = text;
+            if (trimmed.length > remainingSpace) {
+                trimmed = trimmed.substring(0, remainingSpace - 3) + '...';
+            }
+            tweetTextarea.value = `${titlePrefix}\n${trimmed}\n\n${link}`;
+            updateCharCounter();
+        } else if (platform === 'slack') {
+            characterCountContainer.style.display = 'none';
+            sendTweetBtn.className = 'btn btn-slack';
+            sendTweetBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy Slack Format';
+            sendTweetBtn.disabled = false;
+            
+            // Slack markdown styling
+            tweetTextarea.value = `*BigQuery Release [${badge}]* (${date})\n> ${text.replace(/\n/g, '\n> ')}\nRead more: ${link}`;
+        } else if (platform === 'linkedin') {
+            characterCountContainer.style.display = 'none';
+            sendTweetBtn.className = 'btn btn-linkedin';
+            sendTweetBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy LinkedIn Format';
+            sendTweetBtn.disabled = false;
+            
+            // LinkedIn professional styling
+            tweetTextarea.value = `📊 New BigQuery Release! [${badge}] (${date})\n\n${text}\n\nRead the full release documentation here: ${link}\n\n#BigQuery #GoogleCloud #DataEngineering #Analytics`;
+        }
     }
 
     // Copy to Clipboard Utility
@@ -422,6 +531,38 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.removeChild(link);
     }
 
+    // Search Highlighting Utility
+    function highlightHTML(html, search) {
+        if (!search) return html;
+        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(?![^<]*>)(${escapedSearch})`, 'gi');
+        return html.replace(regex, '<mark class="search-highlight">$1</mark>');
+    }
+
+    // Filter Chip Counts Utility
+    function updateFilterChipCounts() {
+        filterChips.forEach(chip => {
+            const type = chip.getAttribute('data-type');
+            const count = updates.filter(update => {
+                const matchesType = type === 'all' || update.type.toLowerCase() === type.toLowerCase();
+                const searchLower = searchQuery.toLowerCase();
+                const matchesSearch = !searchQuery || 
+                    update.date.toLowerCase().includes(searchLower) ||
+                    update.type.toLowerCase().includes(searchLower) ||
+                    update.content_text.toLowerCase().includes(searchLower);
+                return matchesType && matchesSearch;
+            }).length;
+            
+            let countSpan = chip.querySelector('.chip-count');
+            if (!countSpan) {
+                countSpan = document.createElement('span');
+                countSpan.className = 'chip-count';
+                chip.appendChild(countSpan);
+            }
+            countSpan.textContent = count;
+        });
+    }
+
     // ----------------------------------------------------
     // Event Listeners Setup
     // ----------------------------------------------------
@@ -438,6 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             clearSearchBtn.style.display = 'none';
         }
+        currentPage = 1; // Reset pagination
         renderFeed();
     });
     
@@ -446,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchQuery = '';
         clearSearchBtn.style.display = 'none';
         searchInput.focus();
+        currentPage = 1; // Reset pagination
         renderFeed();
     });
 
@@ -455,6 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filterChips.forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             activeFilter = chip.getAttribute('data-type');
+            currentPage = 1; // Reset pagination
             renderFeed();
         });
     });
@@ -467,7 +611,32 @@ document.addEventListener('DOMContentLoaded', () => {
         filterChips.forEach(c => c.classList.remove('active'));
         filterChips[0].classList.add('active');
         activeFilter = 'all';
-        
+        currentPage = 1; // Reset pagination
+        renderFeed();
+    });
+
+    // Layout switcher events
+    layoutCardBtn.addEventListener('click', () => {
+        activeLayout = 'card';
+        layoutCardBtn.classList.add('active');
+        layoutListBtn.classList.remove('active');
+        feedContainer.classList.remove('compact-view');
+        currentPage = 1; // Reset pagination
+        renderFeed();
+    });
+
+    layoutListBtn.addEventListener('click', () => {
+        activeLayout = 'list';
+        layoutListBtn.classList.add('active');
+        layoutCardBtn.classList.remove('active');
+        feedContainer.classList.add('compact-view');
+        currentPage = 1; // Reset pagination
+        renderFeed();
+    });
+
+    // Load More Pagination events
+    loadMoreBtn.addEventListener('click', () => {
+        currentPage++;
         renderFeed();
     });
 
@@ -507,8 +676,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Back to Top Events
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.add('visible');
+        } else {
+            backToTopBtn.classList.remove('visible');
+        }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Share Modal Platform Tab events
+    shareTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const platform = tab.getAttribute('data-platform');
+            updateShareComposer(platform);
+        });
+    });
+
+    // Offline Network Status Events
+    function updateNetworkStatus() {
+        if (navigator.onLine) {
+            offlineBanner.style.display = 'none';
+            refreshBtn.disabled = false;
+        } else {
+            offlineBanner.style.display = 'flex';
+            refreshBtn.disabled = true;
+        }
+    }
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
     // ----------------------------------------------------
     // Initialization
     // ----------------------------------------------------
+    updateNetworkStatus(); // Initial check
     fetchUpdates(false);
 });

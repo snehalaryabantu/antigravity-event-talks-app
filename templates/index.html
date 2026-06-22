@@ -19,6 +19,12 @@
     <div class="glowing-orb orb-2"></div>
 
     <div class="app-container">
+        <!-- Offline Warning Banner -->
+        <div id="offline-banner" class="offline-banner" style="display: none;">
+            <i class="fa-solid fa-wifi-slash animate-pulse"></i>
+            <span>You are currently offline. Release notes are loaded from local cache and cannot be refreshed.</span>
+        </div>
+
         <!-- Header Section -->
         <header class="app-header">
             <div class="logo-area">
@@ -50,12 +56,22 @@
 
         <!-- Search and Filter Controls -->
         <section class="controls-section">
-            <div class="search-bar">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="search-input" placeholder="Search release notes by keyword or feature..." autocomplete="off">
-                <button id="clear-search-btn" class="clear-btn" style="display: none;">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+            <div class="search-bar-row">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search release notes by keyword or feature..." autocomplete="off">
+                    <button id="clear-search-btn" class="clear-btn" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="layout-toggle">
+                    <button id="layout-card-btn" class="layout-btn active" title="Detailed Card View">
+                        <i class="fa-solid fa-table-cells-large"></i>
+                    </button>
+                    <button id="layout-list-btn" class="layout-btn" title="Compact List View">
+                        <i class="fa-solid fa-list"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="filters-container">
@@ -97,13 +113,59 @@
 
         <!-- Main Release Notes Feed -->
         <main class="feed-section">
-            <div id="loading-state" class="state-container">
-                <div class="spinner-container">
-                    <div class="double-spinner"></div>
-                    <i class="fa-solid fa-database central-icon"></i>
+            <div id="loading-state" class="skeleton-feed">
+                <!-- Three skeleton pulsing cards -->
+                <div class="skeleton-card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-badge-date">
+                            <div class="skeleton-badge"></div>
+                            <div class="skeleton-date"></div>
+                        </div>
+                        <div class="skeleton-actions">
+                            <div class="skeleton-action"></div>
+                            <div class="skeleton-action"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-line w-40"></div>
+                        <div class="skeleton-line w-80"></div>
+                        <div class="skeleton-line w-60"></div>
+                    </div>
                 </div>
-                <h3>Fetching BigQuery Release Notes</h3>
-                <p>Connecting to Google Cloud feed and parsing updates...</p>
+                <div class="skeleton-card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-badge-date">
+                            <div class="skeleton-badge"></div>
+                            <div class="skeleton-date"></div>
+                        </div>
+                        <div class="skeleton-actions">
+                            <div class="skeleton-action"></div>
+                            <div class="skeleton-action"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-line w-50"></div>
+                        <div class="skeleton-line w-90"></div>
+                        <div class="skeleton-line w-40"></div>
+                    </div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-badge-date">
+                            <div class="skeleton-badge"></div>
+                            <div class="skeleton-date"></div>
+                        </div>
+                        <div class="skeleton-actions">
+                            <div class="skeleton-action"></div>
+                            <div class="skeleton-action"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-line w-30"></div>
+                        <div class="skeleton-line w-75"></div>
+                        <div class="skeleton-line w-50"></div>
+                    </div>
+                </div>
             </div>
 
             <div id="error-state" class="state-container" style="display: none;">
@@ -128,6 +190,14 @@
 
             <div id="feed-container" class="feed-container" style="display: none;">
                 <!-- Feed cards will be injected here by Javascript -->
+            </div>
+
+            <!-- Load More Pagination Button -->
+            <div class="load-more-container">
+                <button id="load-more-btn" class="btn btn-secondary load-more-btn" style="display: none;">
+                    <i class="fa-solid fa-circle-chevron-down"></i>
+                    <span>Load More Updates</span>
+                </button>
             </div>
         </main>
 
@@ -159,6 +229,19 @@
             </div>
             
             <div class="modal-body">
+                <!-- Share Tabs -->
+                <div class="share-tabs">
+                    <button class="share-tab active" data-platform="twitter">
+                        <i class="fa-brands fa-x-twitter"></i> Twitter / X
+                    </button>
+                    <button class="share-tab" data-platform="slack">
+                        <i class="fa-brands fa-slack"></i> Slack
+                    </button>
+                    <button class="share-tab" data-platform="linkedin">
+                        <i class="fa-brands fa-linkedin"></i> LinkedIn
+                    </button>
+                </div>
+
                 <div class="update-preview-box">
                     <div class="preview-header">
                         <span id="modal-update-badge" class="badge">Feature</span>
@@ -174,8 +257,14 @@
                     <textarea id="tweet-textarea" rows="6" maxlength="280" placeholder="What's happening?"></textarea>
                     <div class="textarea-footer">
                         <span class="character-count-hint">URLs count for 23 characters on X.</span>
-                        <div class="char-counter">
-                            <span id="char-count-current">0</span>/<span class="char-limit">280</span>
+                        <div class="char-counter-container">
+                            <svg class="progress-ring" width="24" height="24">
+                                <circle class="progress-ring-bg" stroke="rgba(255, 255, 255, 0.08)" stroke-width="2" fill="transparent" r="9" cx="12" cy="12"/>
+                                <circle id="progress-ring-circle" class="progress-ring-circle" stroke="var(--accent-primary)" stroke-width="2" fill="transparent" r="9" cx="12" cy="12"/>
+                            </svg>
+                            <div class="char-counter">
+                                <span id="char-count-current">0</span>/<span class="char-limit">280</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -189,6 +278,11 @@
             </div>
         </div>
     </div>
+    <!-- Back to Top Button -->
+    <button id="back-to-top-btn" class="back-to-top-btn" title="Scroll to top">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

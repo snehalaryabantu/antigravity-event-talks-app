@@ -1158,3 +1158,501 @@ body.light-theme .state-container h3 {
     color: #111827;
 }
 
+/* ========================================================
+   Phase 1 Improvements: Quick Wins
+   ======================================================== */
+
+/* Back to Top Floating Button */
+.back-to-top-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--accent-primary);
+    color: white;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 99;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.back-to-top-btn.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.back-to-top-btn:hover {
+    background: var(--accent-secondary);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+}
+
+.back-to-top-btn:active {
+    transform: translateY(-1px) scale(1.0);
+}
+
+/* Search Highlighting */
+.search-highlight {
+    background-color: #facc15;
+    color: #0f172a;
+    padding: 0 0.15rem;
+    border-radius: 3px;
+    font-weight: 600;
+    box-shadow: 0 0 6px rgba(250, 204, 21, 0.4);
+}
+
+/* Filter chip count badges */
+.filter-chip .chip-count {
+    font-size: 0.72rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    padding: 0.1rem 0.4rem;
+    border-radius: 20px;
+    margin-left: 0.4rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.filter-chip.active .chip-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+body.light-theme .filter-chip .chip-count {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text-secondary);
+}
+
+body.light-theme .filter-chip.active .chip-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+/* ========================================================
+   Phase 2 Improvements: Visual Polish
+   ======================================================== */
+
+/* Skeleton Loading Feed */
+.skeleton-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    width: 100%;
+}
+
+.skeleton-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.75rem;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    animation: skeleton-pulse 1.6s infinite linear;
+}
+
+.skeleton-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.skeleton-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.skeleton-badge-date {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.skeleton-badge {
+    width: 90px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+}
+
+.skeleton-date {
+    width: 120px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+}
+
+.skeleton-actions {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.skeleton-action {
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-sm);
+}
+
+.skeleton-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.skeleton-line {
+    height: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+}
+
+.skeleton-line.w-30 { width: 30%; }
+.skeleton-line.w-40 { width: 40%; }
+.skeleton-line.w-50 { width: 50%; }
+.skeleton-line.w-60 { width: 60%; }
+.skeleton-line.w-75 { width: 75%; }
+.skeleton-line.w-80 { width: 80%; }
+.skeleton-line.w-90 { width: 90%; }
+
+@keyframes skeleton-pulse {
+    0% {
+        opacity: 0.45;
+    }
+    50% {
+        opacity: 0.85;
+    }
+    100% {
+        opacity: 0.45;
+    }
+}
+
+/* Character Counter Progress Ring */
+.char-counter-container {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.progress-ring-circle {
+    stroke-dasharray: 56.55; /* 2 * PI * r (r=9) = 56.55 */
+    stroke-dashoffset: 56.55;
+    transition: stroke-dashoffset 0.15s ease, stroke 0.15s ease;
+}
+
+/* Light Theme tweaks for Skeleton */
+body.light-theme .skeleton-card {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+body.light-theme .skeleton-badge,
+body.light-theme .skeleton-date,
+body.light-theme .skeleton-action,
+body.light-theme .skeleton-line {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .progress-ring-bg {
+    stroke: rgba(0, 0, 0, 0.06);
+}
+
+/* ========================================================
+   Phase 3 Improvements: Density & Performance
+   ======================================================== */
+
+/* Search Bar Row Layout */
+.search-bar-row {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+.search-bar-row .search-bar {
+    flex-grow: 1;
+}
+
+/* Layout Switcher Toggle Buttons */
+.layout-toggle {
+    display: flex;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.25rem;
+    align-items: center;
+}
+
+.layout-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.05rem;
+}
+
+.layout-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.layout-btn.active {
+    background: var(--accent-primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Compact List View Layout overrides */
+.feed-container.compact-view {
+    gap: 0.75rem;
+}
+
+.feed-container.compact-view .update-card {
+    padding: 0.85rem 1.25rem;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.feed-container.compact-view .update-card.collapsed {
+    border-color: var(--border-color);
+}
+
+.feed-container.compact-view .update-card.collapsed:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.feed-container.compact-view .update-card .card-header {
+    align-items: center;
+}
+
+.feed-container.compact-view .update-card .card-body {
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Toggle chevron on compact view card headers */
+.compact-toggle-icon {
+    margin-left: 0.5rem;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+.update-card.collapsed .compact-toggle-icon {
+    transform: rotate(0deg);
+}
+
+.update-card:not(.collapsed) .compact-toggle-icon {
+    transform: rotate(180deg);
+    color: var(--accent-primary);
+}
+
+/* Pagination container styling */
+.load-more-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.load-more-btn {
+    padding: 0.85rem 1.75rem;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-sans);
+    font-weight: 600;
+}
+
+.load-more-btn:hover {
+    background-color: var(--bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-hover);
+}
+
+/* Light Theme overrides for Phase 3 */
+body.light-theme .layout-toggle {
+    background: #ffffff;
+}
+
+body.light-theme .layout-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+body.light-theme .layout-btn.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
+body.light-theme .feed-container.compact-view .update-card .card-body {
+    border-top-color: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .load-more-btn {
+    background-color: white;
+}
+
+/* ========================================================
+   Phase 4 Improvements: Offline Warning & Social Formatting
+   ======================================================== */
+
+/* Offline Warning Banner */
+.offline-banner {
+    background: linear-gradient(135deg, var(--accent-amber) 0%, #d97706 100%);
+    color: #070913;
+    padding: 0.85rem 1.5rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.offline-banner i {
+    font-size: 1.15rem;
+}
+
+/* Share Platform Tabs inside modal */
+.share-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.25rem;
+    gap: 0.25rem;
+}
+
+.share-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.7rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.share-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.share-tab.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+/* Platform-specific active states inside modal */
+.modal-container[data-type] .share-tab[data-platform="twitter"].active {
+    background: rgba(29, 155, 240, 0.15);
+    color: var(--accent-twitter);
+}
+
+.modal-container[data-type] .share-tab[data-platform="slack"].active {
+    background: rgba(74, 21, 75, 0.2);
+    color: #36c5f0;
+}
+
+.modal-container[data-type] .share-tab[data-platform="linkedin"].active {
+    background: rgba(10, 102, 194, 0.15);
+    color: #0a66c2;
+}
+
+/* Style swap states for sharing button */
+.btn-slack {
+    background-color: #4a154b !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(74, 21, 75, 0.3) !important;
+}
+
+.btn-slack:hover {
+    background-color: #5d1c5e !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(74, 21, 75, 0.4) !important;
+}
+
+.btn-linkedin {
+    background-color: #0a66c2 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3) !important;
+}
+
+.btn-linkedin:hover {
+    background-color: #0077b5 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(10, 102, 194, 0.4) !important;
+}
+
+/* Light Theme tweaks for Phase 4 */
+body.light-theme .offline-banner {
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+}
+
+body.light-theme .share-tabs {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-theme .share-tab.active {
+    background: rgba(0, 0, 0, 0.05);
+    color: #111827;
+}
+
+body.light-theme .share-tab[data-platform="twitter"].active {
+    color: #1d9bf0 !important;
+}
+
+body.light-theme .share-tab[data-platform="slack"].active {
+    color: #4a154b !important;
+}
+
+body.light-theme .share-tab[data-platform="linkedin"].active {
+    color: #0a66c2 !important;
+}
+
+
+
+
+
